@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:fruit_app/utilities/colors.dart';
 
 class FirstView extends StatelessWidget {
@@ -62,7 +60,7 @@ class FirstView extends StatelessWidget {
                 ),
                 SizedBox(
                   width: size.width * 0.5,
-                  child: Text(
+                  child: const Text(
                     'Enim magna proident proident sunt dost exercitation irure duis excepteur eu enim id elit minim. Non esse aute ut vet da quis.excepte',
                     style: TextStyle(
                         color: Color(0xff919292),
@@ -121,15 +119,38 @@ class FirstView extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: size.height * 0.04),
-                const Align(
+                Align(
                   alignment: Alignment.bottomCenter,
-                  child: Icon(
-                    Icons.home,
-                    size: 26,
-                    color: Color(0xff919292),
+                  child: InkWell(
+                    onTap: () {},
+                    child: const Icon(
+                      Icons.home,
+                      size: 26,
+                      color: Color(0xff919292),
+                    ),
                   ),
                 ),
               ],
+            ),
+          ),
+          Align(
+            alignment: const Alignment(0.4, -0.3),
+            child: Transform.rotate(
+              angle: 6,
+              child: Image(
+                image: const AssetImage('assets/images/pear.png'),
+                height: size.height * 0.16,
+              ),
+            ),
+          ),
+          Align(
+            alignment: const Alignment(0.9, 0.085),
+            child: Transform.rotate(
+              angle: 6.7,
+              child: Image(
+                image: const AssetImage('assets/images/pear.png'),
+                height: size.height * 0.3,
+              ),
             ),
           ),
         ],
