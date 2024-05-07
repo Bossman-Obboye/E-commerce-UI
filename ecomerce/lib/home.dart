@@ -1,19 +1,22 @@
-// import 'package:flutter/cupertino.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
-// import 'package:flutter/widgets.dart';
-// import 'package:flutter/widgets.dart';
+// import 'package:ecomerce/main_page.dart';
+// import 'dart:ffi';
+// import 'dart:ui';
 
-class Homeview extends StatefulWidget {
-  const Homeview({super.key});
+import 'dart:convert';
+
+import 'package:ecomerce/details_screen.dart';
+import 'package:ecomerce/widgets_folder/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
 
   @override
-  State<Homeview> createState() => _HomeviewState();
+  State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeviewState extends State<Homeview> {
+class _HomeViewState extends State<HomeView> {
   final List<String> categories = [
     'All',
     "Shoes",
@@ -27,17 +30,38 @@ class _HomeviewState extends State<Homeview> {
     "Wallets",
     "Jeans"
   ];
-  final double columnChildrenSpacing = 0.02;
+  final double columnChildrenSpacing = 0.017;
+  List<int> likedDisProduct = [];
+  List<int> likedRecProduct = [];
+  List _items = [];
+
+  Future<void> readFromJson() async {
+    final String response =
+        await rootBundle.loadString('assets/data/products.json');
+
+    final data = await jsonDecode(response);
+
+    setState(() {
+      _items = data['items'];
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    readFromJson();
+  }
 
   int selected = 0;
-
+  bool isLiked = false;
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+        body: SafeArea(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -102,56 +126,68 @@ class _HomeviewState extends State<Homeview> {
               SizedBox(
                 height: size.height * columnChildrenSpacing,
               ),
-              Stack(
-                children: [
-                  Container(
-                    height: size.height * 0.17,
-                    width: size.width * 0.9,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: const LinearGradient(
-                        colors: [
-                          Colors.black,
-                          Color(0xef6a6a6a),
-                        ],
-                        stops: [0, 0.9],
+              GestureDetector(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DetailsScreen(
+                              itemDescription: _items[2]['description'],
+                              itemImage: _items[2]['image'],
+                              itemName: _items[2]['name'],
+                              itemPrice: _items[2]['price'].toStringAsFixed(2),
+                            ))),
+                child: Stack(
+                  children: [
+                    Container(
+                      height: size.height * 0.17,
+                      width: size.width * 0.9,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: const LinearGradient(
+                          colors: [
+                            Colors.black,
+                            Color(0xef6a6a6a),
+                          ],
+                          stops: [0, 0.9],
+                        ),
                       ),
                     ),
-                  ),
-                  const Positioned(
-                    left: 20,
-                    top: 25,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "BLACK FRIDAY",
-                          style: TextStyle(
-                            fontSize: 27,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                    const Positioned(
+                      left: 20,
+                      top: 25,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "BLACK FRIDAY",
+                            style: TextStyle(
+                              fontSize: 27,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        Text(
-                          "30% off for all items",
-                          style: TextStyle(
-                            fontSize: 17,
-                            color: Color.fromARGB(255, 182, 181, 181),
+                          Text(
+                            "30% off for all items",
+                            style: TextStyle(
+                              fontSize: 17,
+                              color: Color.fromARGB(255, 182, 181, 181),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    right: 15,
-                    child: Image(
-                      image: const AssetImage("assets/images/Puma_cropped.png"),
-                      height: size.height * 0.18,
-                      width: size.width * 0.32,
+                    Positioned(
+                      bottom: 2,
+                      right: 15,
+                      child: Image(
+                        image:
+                            const AssetImage("assets/images/Puma_cropped.png"),
+                        height: size.height * 0.18,
+                        width: size.width * 0.32,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               SizedBox(
                 height: size.height * columnChildrenSpacing,
@@ -207,14 +243,28 @@ class _HomeviewState extends State<Homeview> {
                 height: size.height * 0.28,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: products.length,
+                  itemCount: _items.length,
                   itemBuilder: (context, index) {
-                    final product = products[index];
-                    return DisplayCard(
-                      size: size,
-                      img: product['image'],
-                      itemName: product['name'],
-                      itemPrice: product["price"],
+                    final item = _items[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => DetailsScreen(
+                                      itemDescription: item['description'],
+                                      itemImage: item['image'],
+                                      itemName: item['name'],
+                                      itemPrice:
+                                          item["price"].toStringAsFixed(2),
+                                    )));
+                      },
+                      child: DisplayCard(
+                        size: size,
+                        img: item['image'],
+                        itemName: item['name'],
+                        itemPrice: item["price"],
+                      ),
                     );
                   },
                 ),
@@ -235,189 +285,133 @@ class _HomeviewState extends State<Homeview> {
                 ],
               ),
               SizedBox(
-                height: size.height * 0.11,
-                child: ListView.builder(
-                  itemCount: 4,
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, index) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Container(
-                      // height: size.height * 0.11,
-                      width: size.width * 0.7,
-                      padding: EdgeInsets.only(top: size.height * 0.015),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Colors.black,
-                          width: 1,
+                height: size.height * 0.1,
+                child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context, index) {
+                      final product = products[index];
+                      bool liked = likedRecProduct.contains(index);
+                      return RecomCard(
+                        size: size,
+                        image: product['image'],
+                        name: product['name'],
+                        price: product['price'],
+                        like: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              liked
+                                  ? likedRecProduct.remove(index)
+                                  : likedRecProduct.add(index);
+                            });
+                          },
+                          icon: Icon(
+                              liked ? Icons.favorite : Icons.favorite_outline),
                         ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Image(
-                            image: const AssetImage(
-                              "assets/images/Puma_cropped.png",
-                            ),
-                            width: size.width * 0.17,
-                          ),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Luxuy Shoe",
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
-                              ),
-                              Text(
-                                "\$45.00",
-                                style: TextStyle(
-                                  fontSize: 17,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Icon(Icons.favorite),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+                      );
+                    },
+                    separatorBuilder: (context, index) {
+                      return SizedBox(
+                        width: size.width * 0.04,
+                      );
+                    },
+                    itemCount: products.length),
+              )
             ],
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
-class DisplayCard extends StatefulWidget {
-  const DisplayCard({
+class WideWidthDisplayCardFavouriteIcon extends StatefulWidget {
+  const WideWidthDisplayCardFavouriteIcon({
     super.key,
-    required this.size,
-    required this.img,
-    required this.itemName,
-    required this.itemPrice,
   });
 
-  final Size size;
-
-  final String img;
-  final String itemName;
-  final double itemPrice;
-
   @override
-  State<DisplayCard> createState() => _DisplayCardState();
+  State<WideWidthDisplayCardFavouriteIcon> createState() =>
+      _WideWidthDisplayCardFavouriteIconState();
 }
 
-class _DisplayCardState extends State<DisplayCard> {
-  final double columnChildrenSpacing = 0.02;
-  bool myFavourite = false;
-
+class _WideWidthDisplayCardFavouriteIconState
+    extends State<WideWidthDisplayCardFavouriteIcon> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return IconButton(
+        icon: const Icon(Icons.favorite, size: 20),
+        // : const Icon(Icons.favorite_outline, size: 20),
+        onPressed: () {
+          setState(() {
+            // myFavourite == !myFavourite;
+          });
+        });
+  }
+}
+
+class RecomCard extends StatefulWidget {
+  const RecomCard(
+      {super.key,
+      required this.size,
+      required this.image,
+      required this.name,
+      required this.price,
+      required this.like});
+  final Size size;
+  final String image;
+  final String name;
+  final double price;
+  final IconButton like;
+
+  @override
+  State<RecomCard> createState() => _RecomCardState();
+}
+
+class _RecomCardState extends State<RecomCard> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.size.width * 0.6,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: Colors.black,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 3.0),
-            child: Stack(
+          Image(
+            image: AssetImage(
+              widget.image,
+            ),
+          ),
+          SizedBox(
+            width: widget.size.width * 0.19,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: widget.size.height * 0.21,
-                  width: widget.size.width * 0.4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xeff8f8f8),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Align(
-                    alignment: const Alignment(1, -1),
-                    child: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          myFavourite = !myFavourite;
-                        });
-                      },
-                      icon: myFavourite
-                          ? const Icon(
-                              Icons.favorite,
-                              size: 20,
-                            )
-                          : const Icon(
-                              Icons.favorite_outline,
-                              size: 20,
-                            ),
-                    ),
+                Text(
+                  widget.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 17,
                   ),
                 ),
-                Positioned(
-                  height: widget.size.height * 0.145,
-                  left: 25,
-                  bottom: 10,
-                  child: Image(
-                    image: AssetImage(widget.img),
+                Text(
+                  '${widget.price}',
+                  style: const TextStyle(
+                    fontSize: 17,
                   ),
                 ),
               ],
             ),
           ),
-          Text(
-            widget.itemName,
-            style: const TextStyle(
-              fontSize: 17,
-            ),
-          ),
-          Text(
-            "\$${widget.itemPrice}",
-            style: const TextStyle(
-              fontSize: 17,
-            ),
-          ),
+          widget.like
         ],
       ),
     );
   }
 }
-
-List<Map<String, dynamic>> products = [
-  {
-    'image': 'assets/images/luxury_shoe.png',
-    'name': "Luxury Shoe",
-    'price': 45.0,
-  },
-  {
-    'image': 'assets/images/bluebag-removebg-preview.png',
-    'name': "Gucci Bag",
-    'price': 58.0,
-  },
-  {
-    'image': 'assets/images/Puma_cropped.png',
-    'name': "Puma Snicker",
-    'price': 98.0,
-  },
-  {
-    'image': 'assets/images/leatherbag.png',
-    'name': "Leather bag",
-    'price': 135.0,
-  },
-  {
-    'image': 'assets/images/handbag.png',
-    'name': "Ladies Bag",
-    'price': 25.0,
-  },
-  {
-    'image': 'assets/images/Snicker.png',
-    'name': "Snicker",
-    'price': 30.0,
-  },
-  {
-    'image': 'assets/images/white_snicker.png',
-    'name': "White Snicker",
-    'price': 78.0,
-  },
-];
